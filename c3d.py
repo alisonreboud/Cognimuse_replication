@@ -49,29 +49,12 @@ labels_path=[
 './COGNIMUSEdatabase/SaliencyAnnotation/CHI/SaliencyAnnotation/Visual/Labs_CHI_Visual_IF23.mat']
 
 
-test='CRA'
-"""
+#test='CRA'
 parser = argparse.ArgumentParser("FEATURE EXTRACTION")
 # Dataset options
-parser.add_argument('-v', '--video', type=str, required=True, help="video name required")
+parser.add_argument('-t', '--testvideo', type=str, required=True, help="video name required")
 args = parser.parse_args()
-video_path=args.video
-"""
-
-
-"""
->> import psutil
->>> mem = psutil.virtual_memory()
->>> mem
-svmem(total=10367352832, available=6472179712, percent=37.6, used=8186245120, free=2181107712, active=4748992512, inactive=2758115328, buffers=790724608, cached=3500347392, shared=787554304, slab=199348224)
->>>
->>> THRESHOLD = 100 * 1024 * 1024  # 100MB
->>> if mem.available <= THRESHOLD:
-...     print("warning")
-# ### Global Variables
-"""
-
-
+test=args.testvideo
 
 def pad_frames(frames):
     frames_qtt = frames.shape[0]
@@ -99,12 +82,10 @@ def pad_frames(frames):
 def step_decay(epoch):
    initial_lrate = 0.001
    drop = 0.1
-   epochs_drop = 5
+   epochs_drop = 7
    lrate = initial_lrate * math.pow(drop,
            math.floor((1+epoch)/epochs_drop))
-   print('hoooooooooooooooooooooo')
    print(lrate)
-   print('hiiiiiiiiiiiiiiiiiiiiiiiiiiiiii')
    return lrate
 
 
@@ -113,15 +94,9 @@ def step_decay(epoch):
 def get_video_array(video_path,label_path,set,video_name):
     clip = VideoFileClip(video_path, target_resolution=(225, None))
     clip_width = clip.get_frame(0).shape[1]
-
-    #[1]
     assert (clip_width > 224)
-    # "width" should be [2], and should be > 224
-    print(clip_width)
     offset = int((clip_width - 224) / 2)
-    print(label_path)
     labels_video = loadmat(label_path)
-    # x1=loadmat('Labs_AR_LONDON_Visual_IF23.mat')
     df=pd.DataFrame()
     try:
         label_list = (labels_video['IF23'][0])
@@ -133,7 +108,6 @@ def get_video_array(video_path,label_path,set,video_name):
     while True:
         try:
             print(start_frame)
-            # frames = np.array([x for x in clip.iter_frames()])
             frames = []
             for frame in clip.iter_frames():
                 frames.append(frame)
@@ -147,7 +121,6 @@ def get_video_array(video_path,label_path,set,video_name):
                     dict={"frames":np_frames,'label':label}
                     file_name=os.path.join(set,video_name+ str(start_frame) + ".pkl")
                     pickle.dump(dict, open(file_name, "wb"))
-                    # do whatever you want with it
                     frames = []  # empty to start over
                     start_frame += _FRAMES
             frames_list.append(frames)
@@ -171,7 +144,7 @@ def get_video_array(video_path,label_path,set,video_name):
                 break
 
 
-    return print('termine')
+    return print('got video blocks')
 """
 for i in range(len(videos)):
     if test not in videos[i]:
@@ -186,7 +159,6 @@ Y_test=df_test['labels']
 #
 #Y_train=tf.reshape(Y_train, [Y_train.shape[0],2])
 """
-
 
 def run_c3d(training_generator,validation_generator,test_generator):
     model = Sequential()
@@ -242,12 +214,13 @@ def run_c3d(training_generator,validation_generator,test_generator):
     model.compile(optimizer=SGD(lr=0.001, momentum=0.9), loss='binary_crossentropy', metrics=['accuracy'])
     # Train model on dataset
     lrate = LearningRateScheduler(step_decay)
-    earlystop=EarlyStopping(monitor='val_loss', min_delta=0, patience=5, verbose=0, mode='auto', baseline=None,
-                             restore_best_weights=True)
-    callbacks_list = [earlystop,lrate]
+    #earlystop=EarlyStopping(monitor='val_loss', min_delta=0, patience=5, verbose=0, mode='auto', baseline=None,
+                             #restore_best_weights=True)
+    #callbacks_list = [earlystop,lrate]
+    callbacks_list = [lrate]
     hist=model.fit_generator(generator=training_generator,
                         validation_data=validation_generator,
-                        use_multiprocessing=True,workers=2,epochs=30,callbacks = callbacks_list)
+                        use_multiprocessing=True,workers=2,epochs=15,callbacks = callbacks_list)
     pickle.dump(hist.history, open('history_0002', "wb"))
     predictions= model.predict_generator(generator=test_generator)
     #predictions = model.predict(validation_data)
@@ -301,17 +274,6 @@ Y_test=[labels[ID] for ID in partition['validation']]
 auc_score = roc_auc_score(Y_test, np.argmax(predictions, axis=1))
 print(auc_score)
 
-
-
-
-"""
-#Initial input shape: (None, 3, 16, 112, 112)
-dic1=pickle.load(open("train_set/GLA0.pkl", "rb"))
-print((dic1['frames'].reshape((3, 224,224,16))).shape)
-X_train=a
-for file in os.listdir("train_set/"):
-    loaded_file=pickle.load(open('train_set/'+file, "rb"))
-"""
 
 
 
