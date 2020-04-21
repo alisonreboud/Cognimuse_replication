@@ -1,37 +1,4 @@
 
-Skip to content
-Pull requests
-Issues
-Marketplace
-Explore
-@alisonreboud
-Learn Git and GitHub without any code!
-
-Using the Hello World guide, you’ll start a branch, write comments, and open a pull request.
-alisonreboud /
-Cognimuse
-Private
-
-1
-0
-
-    0
-
-Code
-Issues 0
-Pull requests 0
-Actions
-Projects 0
-Security 0
-Insights
-Settings
-Cognimuse/c3d.py /
-@alisonreboud alisonreboud c3d 3cbc59b 17 minutes ago
-318 lines (269 sloc) 11.2 KB
-Code navigation is available!
-
-Navigate your code with ease. Click on function and method calls to jump to their definitions or references in the same repository. Learn more
-
 from moviepy.editor import VideoFileClip
 import numpy as np
 from scipy.io import loadmat
