@@ -1,30 +1,13 @@
 
-
-from moviepy.editor import VideoFileClip
 import numpy as np
 from scipy.io import loadmat
 from collections import Counter
-import tensorflow as tf
-from numpy import save
-## Kinects-i3D ##
-import sys
-from my_classes import DataGenerator
 from keras import backend as K
 K.set_image_dim_ordering('th')
-from sklearn.metrics import roc_auc_score
-import pandas as pd
 from moviepy.editor import VideoFileClip
-from keras.callbacks import LearningRateScheduler
-from keras.callbacks import EarlyStopping
 import os
 import argparse
-import math
 import pickle
-import json
-from keras.models import Sequential
-from keras.layers.core import Dense, Dropout, Flatten
-from keras.layers.convolutional import Convolution3D, MaxPooling3D, ZeroPadding3D
-from keras.optimizers import SGD
 _IMAGE_SIZE = [224,224]
 _FRAMES=16
 #number of files in test 2498
@@ -57,6 +40,7 @@ parser.add_argument('-t', '--testvideo', type=str, required=True, help="video na
 args = parser.parse_args()
 test=args.testvideo
 
+
 def pad_frames(frames):
     frames_qtt = frames.shape[0]
     if (frames_qtt < _FRAMES):  # padding the frame
@@ -79,20 +63,16 @@ def pad_frames(frames):
 
     return rgb_array
     
-    
-  def get_video_array(video_path,label_path,set,video_name):
+def get_video_array(video_path,label_path,set,video_name):
     clip = VideoFileClip(video_path, target_resolution=(225, None))
     clip_width = clip.get_frame(0).shape[1]
     assert (clip_width > 224)
     offset = int((clip_width - 224) / 2)
     labels_video = loadmat(label_path)
-    df=pd.DataFrame()
     try:
         label_list = (labels_video['IF23'][0])
     except:
         label_list = (labels_video['IF'][0])
-    frames_list=[]
-    average_labels_list=[]
     start_frame=0
     while True:
         try:
@@ -112,8 +92,6 @@ def pad_frames(frames):
                     pickle.dump(dict, open(file_name, "wb"))
                     frames = []  # empty to start over
                     start_frame += _FRAMES
-            frames_list.append(frames)
-            average_labels_list.append(frames)
 
         except Exception as e:
             print(e)
@@ -127,9 +105,21 @@ def pad_frames(frames):
                 print(len(f))
                 f = pad_frames(f)
                 print(len(f))
-                frames_list.append(frames)
-                average_labels_list.append(frames)
+                dict = {"frames": np_frames, 'label': label}
+                file_name = os.path.join(set, video_name + str(start_frame) + ".pkl")
+                pickle.dump(dict, open(file_name, "wb"))
+                break
             else:
                 break
-   return print('got video blocks')
+    return print('got video blocks')
+
+for i in range(len(videos)):
+    if test not in videos[i]:
+        print(labels_path[i])
+        get_video_array(videos_path[i], labels_path[i],'data/train_set',videos[i])
+    else:
+        get_video_array(videos_path[i], labels_path[i],'data/test_set',videos[i])
+
+
+
 
