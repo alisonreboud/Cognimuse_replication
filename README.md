@@ -25,6 +25,8 @@ data/train_set/
 Saves testing set under 
 data/test_set/
 
+2) Running the model 
+
 c3d.py 
 
 runs c3d model and returns auc, saving history and predictions to 'history_000.pkl', 'predictions.pkl' respectively
